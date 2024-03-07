@@ -1,3 +1,15 @@
 [submodule "Weser_Bedform_Analysis_Codes"]
 	path = Weser_Bedform_Analysis_Codes
 	url = https://github.com/DrAliceLefebvre/Weser_Bedform_Analysis_Codes
+[submodule "BedformSeparation_Identification"]
+	path = BedformSeparation_Identification
+	url = https://github.com/j-zomer/BedformSeparation_Identification
+[submodule "bambi_0.1.0"]
+	path = bambi_0.1.0
+	url = https://github.com/juliamorphology/bambi_0.1.0
+[submodule "Bedform-analysis"]
+	path = Bedform-analysis
+	url = https://github.com/twilight5284/Bedform-analysis
+[submodule "BIA-BedformIdentificationAlgorithm"]
+	path = BIA-BedformIdentificationAlgorithm
+	url = https://github.com/LeonSchei/BIA-BedformIdentificationAlgorithm
