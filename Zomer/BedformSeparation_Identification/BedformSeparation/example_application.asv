@@ -1,0 +1,86 @@
+close all
+clearvars;
+
+addpath('./BedformIdentification');
+addpath('./BedformSeparation');
+
+% Load an example transect
+load example_transect.mat
+
+%%%%% Separate bathymetric data  representing multiscale bedforms %%%%%%%%%
+% Set parameters: 
+d_x = 15;               % The half span of the LOESS smoother. Approximately 3-5 times the secondary bedform length
+window = 10;            % Window in which exact break location can be set. Around 0.2 times the primary dune length
+cutoff_slope = 0.05;    % Cutoff slope, default 0.03
+
+% Separate the bed elevation profile. z_separation is the resulting fitted
+% line, idx_sigmoid indicates where the fitted line is determined by a
+% sigmoid fit. This information is used in determining the maximum lee side
+% angle of primary dunes. s is the longitudinal coordinate along the
+% curvilinear grid.
+[z_separation, idx_sigmoid]= bedformSeparation(s,z,d_x,window,cutoff_slope);
+
+% For larger datasets, the bedform separation can be run in parallel, to
+% decrease computational time. 
+
+% Plot
+figure; 
+subplot(2,1,1); hold on; plot(s,z,'k'); 
+    plot(s,z_separation,'r');
+    xlim([min(s) max(s)]); ylabel('z [m]'); xlabel('s [m]');
+subplot(2,1,2); hold on; plot(s, z-z_separation','k'); % Secondary bedforms
+    plot(s,zeros(length(z),1),'r')
+    xlim([min(s) max(s)]); ylabel('z [m]'); xlabel('s [m]');
+
+
+%%%%% Identify bedforms and calculate properties %%%%%%%%%%%%%%%%%%%%%%%%%%
+% Put data in the correct structure: 
+data.grids = s; % Longitudinal coordinate along curvilinear grid.
+data.gridn = n; % Cross-sectional coordinate.
+data.gridx = x; % In case of curvilinear grid, used to compute the length along grid
+data.gridy = y; % In case of curvilinear grid, used to compute the length along grid 
+data.gridz = z;% 
+data.gridz_separation = z_separation';
+data.idx_sigmoid = idx_sigmoid'; % Required for determining max primary lee slope
+
+timesteps = 1;
+transects = 1;
+propsSec = propsSecondary(data,timesteps, transects);
+propsPrim = propsPrimary(data, timesteps, transects);
+
+% Filtering parameters can be adjusted in the script.
+remove = 'yes'; % yes or no: determines whether filtered bedforms are removed or only flagged. 
+[propsSec, propsPrim, perc] = propsFilter(propsSec, propsPrim, data, timesteps, transects, remove);
+
+% Plot profile with identified troughs and tops. 
+ylims = [-4.4 -1.5];
+set(gca, 'XTickLabel',[],'YTickLabel',{num2str(ylims(1)), num2str(ylims(2))},'XTick',[],'YTick',ylims,'YAxisLocation','right');box on;
+ylim(ylims); xlim([27500 28000])
+y=ylabel('z [m+NAP]'); 
+%%%%%%%%%%%%%%%%%%%%%%%%%% Timesetep 181 P2 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+plot(s,z,'LineWidth',1, 'color','k');
+plot(d,data181.lowpass(transect1,:,time),'LineWidth',lw,'color',color1);
+plot(data181.grids(transect1, props181.secondary(transect1,time).cr),...
+    data181.gridz(transect1, props181.secondary(transect1,time).cr,time),'.',...
+    'marker',marker_sec,'markersize',markersize_sec, 'MarkerFaceColor',color2, 'color', color2);
+plot(data181.grids(transect1, props181.secondary(transect1,time).tr1),...
+    data181.gridz(transect1, props181.secondary(transect1,time).tr1,time),'.',...
+    'marker',marker_sec,'markersize',markersize_sec, 'MarkerFaceColor',[1,1,1], 'color', color2);
+plot(data181.grids(transect1, props181.secondary(transect1,time).tr2),...
+    data181.gridz(transect1, props181.secondary(transect1,time).tr2,time),'.',...
+    'marker',marker_sec,'markersize',markersize_sec, 'MarkerFaceColor',[1,1,1], 'color', color2);
+
+plot(data181.grids(transect1,props181.primary(transect1,time).cr),...
+    data181.lowpass(transect1,props181.primary(transect1,time).cr,time),'.',...
+    'marker',marker_prim,'markersize',markersize_prim, 'MarkerFaceColor',color3,'color', color3);
+plot(data181.grids(transect1,props181.primary(transect1,time).tr1),...
+    data181.lowpass(transect1,props181.primary(transect1,time).tr1,time),'.',...
+    'marker',marker_prim,'markersize',markersize_prim, 'MarkerFaceColor',[1,1,1],'color', color3);
+plot(data181.grids(transect1,props181.primary(transect1,time).tr2),...
+    data181.lowpass(transect1,props181.primary(transect1,time).tr2,time),'.',...
+    'marker',marker_prim,'markersize',markersize_prim, 'MarkerFaceColor',[1,1,1],'color', color3);
+
+
+
+
+
